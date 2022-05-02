@@ -6,16 +6,10 @@ from datetime import datetime
 
 print("Nuisance Flooding CoF - Starting Config: " + datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
 
-ped_route_dict = {'MCW':3, 'CW':2, 'NW':1, 'PD':1, 'LS':1}
-transit_route_dict = {'RT':3, 'RTMTP':3, 'MTP':2, 'TA':2, 'LS':1}
-traffic_route_dict = {'RTMCT':3, 'MCT':3, 'NC':2, 'DC':2, 'CS':1, 'TA':1}
-freight_route_dict = {'RT':3, 'PT':2, 'MT':2, 'TA':1}
-emergency_route_dict = {'MAJ':3, 'SEC':2, 'MIN':1}
-bike_route_dict = {'MCB':3, 'CB':2, 'LS':1}
-#zoning_dict = {'COM':3, 'IND':2, 'RES':1} # check - don't know if this is accurate
-#CVI_dict = {321-480: 3, 161-320: 2, 1-160: 1} #figure out how to use these
-#freq_service_dict = {>15: 3, >10 and <=15: 2, <=10: 1} # figure out how to use
+#for testing
+output_gdb = r"\\besfile1\ccsp\Mapping\Gdb\Stormwater_NuisanceFlooding_CoF_dev.gdb"
 
+log_file = r"\\besfile1\ccsp\Mapping\dev\log\NF_CoF_log"
 
 connections = r"\\besfile1\grp117\DAshney\Scripts\connections"
 
@@ -42,7 +36,8 @@ SRTS = "https://services.arcgis.com/quVN97tn06YNGj9s/arcgis/rest/services/SRTSin
 
 #Facility
 zoning = r"\\besfile1\StormWaterProgram\Data\RAFT\RAWQ\landuse_for_wq2.tif"
-zoning_layer = arcpy.MakeRasterLayer_management(zoning)
+#zoning_layer = arcpy.MakeRasterLayer_management(zoning)
+zoning_vector = arcpy.RasterToPolygon_conversion(zoning, r"in_memory\zoning_vector", "NO_SIMPLIFY", "Category", "MULTIPLE_OUTER_PART")
 critical_fac = EGH_PUBLIC + r"\EGH_PUBLIC.ARCMAP_ADMIN.critical_facilities_pbem_pdx"
 schools = EGH_PUBLIC + r"\EGH_PUBLIC.ARCMAP_ADMIN.schools_metro"
 
@@ -63,10 +58,35 @@ freight_class_copy = arcpy.CopyFeatures_management(freight_class, r"in_memory\fr
 emergency_class_copy = arcpy.CopyFeatures_management(emergency_class, r"in_memory\emergency_class_copy")
 bike_class_copy = arcpy.CopyFeatures_management(bike_class, r"in_memory\bike_class_copy")
 SRTS_copy = arcpy.CopyFeatures_management(SRTS, r"in_memory\SRTS_copy")
-zoning_layer = arcpy.CopyRaster_management(zoning_layer, r"in_memory\zoning_copy")
+zoning_copy = arcpy.CopyFeatures_management(zoning_vector, r"in_memory\zoning_copy")
 critical_fac_copy = arcpy.CopyFeatures_management(critical_fac, r"in_memory\critical_fac_copy")
 schools_copy = arcpy.CopyFeatures_management(schools, r"in_memory\schools_copy")
 CVI_copy = arcpy.CopyFeatures_management(CVI, r"in_memory\CVI_copy")
 block_objects_copy = arcpy.CopyFeatures_management(block_objects, r"in_memory\block_objects_copy")
+
+#take of max of AM / PM arrivals - creates 'arrivals_all' field
+utility.calc_max_arrivals(peak_arrivals_copy)
+
+ped_route_dict = {'MCW':3, 'CW':2, 'NW':1, 'PD':1, 'LS':1}
+transit_route_dict = {'RT':3, 'RTMTP':3, 'MTP':2, 'TA':2, 'LS':1}
+traffic_route_dict = {'RTMCT':3, 'MCT':3, 'NC':2, 'DC':2, 'CS':1, 'TA':1}
+freight_route_dict = {'RT':3, 'PT':2, 'MT':2, 'TA':1}
+emergency_route_dict = {'MAJ':3, 'SEC':2, 'MIN':1}
+bike_route_dict = {'MCB':3, 'CB':2, 'LS':1}
+zoning_dict = {'COM':3, 'HeavyIND':2, 'LightIND':2, 'MFR':1, 'SFR':1}
+#values for CVI and frequent service (peak arrivals) are coded in utility.calc_CVI_scores and utility.calc_freq_svc_scores because they use ranges
+
+source_field_score_text_dict = {
+                     ped_class_copy: ['Pedestrian', ped_route_dict],
+                     transit_class_copy: ['Transit', transit_route_dict],
+                     traffic_class_copy: ['Traffic', traffic_route_dict],
+                     freight_class_copy: ['Freight', freight_route_dict],
+                     emergency_class_copy: ['Emergency', emergency_route_dict],
+                     bike_class_copy: ['Bicycle', bike_route_dict],
+                     zoning_copy: ['Category', zoning_dict]
+                     }
+
+CVI_dict = {CVI_copy: 'OVERALL_RANK'}
+freq_svc_dict = {peak_arrivals_copy: 'arrivals_all'}
 
 print("Nuisance Flooding CoF - Config Complete: " + datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
