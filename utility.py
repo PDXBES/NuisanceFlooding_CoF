@@ -78,6 +78,7 @@ def calc_CVI_scores(source_fc, source_field, target_field):
                 pass
             cursor.updateRow(row)
 
+# could not quickly come up with a way to do this using the dict method
 def calc_freq_svc_scores(source_fc, source_field, target_field):
     with arcpy.da.UpdateCursor(source_fc, [source_field, target_field]) as cursor:
         for row in cursor:
@@ -141,16 +142,9 @@ def calc_max_arrivals(input_fc):
                     pass
             cursor.updateRow(row)
 
-def get_field_names(input_fc):
-    field_names = []
-    fields = arcpy.ListFields(input_fc)
-    for field in fields:
-        field_names.append(field.name)
-    return field_names
-
 def selected_field_names(input_fc, text_string_to_find):
     selected_names = []
-    for name in get_field_names(input_fc):
+    for name in list_field_names(input_fc):
         if text_string_to_find in name:
             selected_names.append(name)
     return selected_names
@@ -166,5 +160,38 @@ def set_selected_field_Nulls_to_zero(input_fc, text_string_to_find):
                     row[count] = 0
                 count = count + 1
             cursor.updateRow(row)
+
+def fillField_ifOverlap(input, overlapFC, target_field, value):
+    #input_layer = "input_layer"
+
+    add_field_if_needed(input, target_field, "SHORT")
+
+    #arcpy.MakeFeatureLayer_management(input, input_layer)
+    selection = arcpy.SelectLayerByLocation_management(input, "INTERSECT", overlapFC)
+    arcpy.CalculateField_management(selection, target_field, value)
+
+def add_category_fields(input_fc, category_dict):
+    for key in category_dict.keys():
+        add_field_if_needed(input_fc, key, "SHORT")
+
+def get_field_list_from_category_dict(key, value):
+    field_list = []
+    field_list.append(key)
+    for item in value:
+        field_list.append(item)
+    return field_list
+
+def populate_category_fields(input_fc, category_dict):
+    add_category_fields(input_fc, category_dict)
+    for key, value in category_dict.items():
+        field_list = get_field_list_from_category_dict(key, value)
+        with arcpy.da.UpdateCursor(input_fc, field_list) as cursor:
+            for row in cursor:
+                row[0] = sum(row[1:])
+                cursor.updateRow(row)
+
+
+
+
 
 

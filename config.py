@@ -51,7 +51,7 @@ print(" - Reading inputs into memory: " + datetime.now().strftime("%m/%d/%Y, %H:
 ped_districts_copy = arcpy.CopyFeatures_management(ped_districts, r"in_memory\ped_districts_copy")
 ped_class_copy = arcpy.CopyFeatures_management(ped_class, r"in_memory\ped_class_copy")
 peak_arrivals_copy = arcpy.CopyFeatures_management(peak_arrivals, r"in_memory\peak_arrivals_copy")
-service_buffer_copy = arcpy.CopyFeatures_management(service_buffer, r"in_memory\service_buffer_copy")
+service_buffer_copy = arcpy.CopyFeatures_management(service_buffer, r"in_memory\service_buffer_copy") # don't think this is needed
 transit_class_copy = arcpy.CopyFeatures_management(transit_class, r"in_memory\transit_class_copy")
 traffic_class_copy = arcpy.CopyFeatures_management(traffic_class, r"in_memory\traffic_class_copy")
 freight_class_copy = arcpy.CopyFeatures_management(freight_class, r"in_memory\freight_class_copy")
@@ -88,5 +88,12 @@ source_field_score_text_dict = {
 
 CVI_dict = {CVI_copy: 'OVERALL_RANK'}
 freq_svc_dict = {peak_arrivals_copy: 'arrivals_all'}
+
+categories = {
+            'Foot_Sum': ['MAX_Pedestrian_Score', 'MAX_arrivals_all_Score', 'SRTS_Score', 'ped_district_Score'],
+            'Vehicle_Sum': ['MAX_Transit_Score', 'MAX_Traffic_Score', 'MAX_Freight_Score', 'MAX_Emergency_Score', 'MAX_Bicycle_Score'],
+            'Facility_Sum': ['MAX_Category_Score', 'critical_fac_Score'],
+            'CVI_Sum': ['MAX_OVERALL_RANK_Score']
+            }
 
 print("Nuisance Flooding CoF - Config Complete: " + datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
