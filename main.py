@@ -24,7 +24,7 @@ log_obj.info(" --- populating for - frequent service".format())
 utility.populate_BO_MAX_score_for_freq_svc(config.freq_svc_dict)
 
 #calc scores based on intersect alone
-value = 3 # set by Heidi - 3 if overlap
+value = 3 # set by Heidi - 3 if overlap, 0 if not
 
 utility.fillField_ifOverlap(config.block_objects_copy, config.critical_fac_copy, "critical_fac_Score", value)
 utility.fillField_ifOverlap(config.block_objects_copy, config.schools_copy, "critical_fac_Score", value)
@@ -37,8 +37,20 @@ utility.fillField_ifOverlap(config.block_objects_copy, config.ped_districts, "pe
 log_obj.info(" - zero out Score fields (remove Nulls) - ".format())
 utility.set_selected_field_Nulls_to_zero(config.block_objects_copy, 'Score')
 
-log_obj.info(" - add and populate Category fields (sums) - ".format())
+log_obj.info(" - add and populate Category fields (score sums) - ".format())
 utility.populate_category_fields(config.block_objects_copy, config.categories)
+
+#log_obj.info(" - add and populate sum of Category values - ".format())
+# didn't actually need this - keep for now
+#utility.populate_category_sums(config.block_objects_copy, "category_sums", config.categories)
+
+# bin upper, middle, lower 1/3 of values within each category and assign 3,2,1
+for key in config.categories.keys():
+    log_obj.info(" - add and populate binned value for - {}".format(key))
+    utility.populate_binned_score(config.block_objects_copy, key)
+
+log_obj.info(" - add and populate Binned_Sum - ".format())
+utility.populate_bin_sums(config.block_objects_copy, 'Binned_Sum', 'binned')
 
 log_obj.info(" - save block objects to disk - {}".format(config.output_gdb))
 arcpy.CopyFeatures_management(config.block_objects_copy, os.path.join(config.output_gdb, "BO_TEST1"))

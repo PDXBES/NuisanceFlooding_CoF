@@ -29,7 +29,6 @@ def get_field_value_as_dict(input, key_field, value_field):
     with arcpy.da.SearchCursor(input, (key_field, value_field)) as cursor:
         for row in cursor:
             value_dict[row[0]] = row[1]
-    #print(value_dict)
     return value_dict
 
 def assign_field_value_from_dict(input_dict, target, target_key_field, target_field):
@@ -181,6 +180,12 @@ def get_field_list_from_category_dict(key, value):
         field_list.append(item)
     return field_list
 
+def get_keys_list_from_category_dict(category_dict):
+    keys = []
+    for key in category_dict.keys():
+        keys.append(key)
+    return keys
+
 def populate_category_fields(input_fc, category_dict):
     add_category_fields(input_fc, category_dict)
     for key, value in category_dict.items():
@@ -189,6 +194,62 @@ def populate_category_fields(input_fc, category_dict):
             for row in cursor:
                 row[0] = sum(row[1:])
                 cursor.updateRow(row)
+
+def populate_new_field_with_sum_of_others(input_fc, new_field_name, binned_fields):
+    add_field_if_needed(input_fc, new_field_name, 'SHORT')
+    fields = [new_field_name]
+    for field in binned_fields:
+        fields.append(field)
+    with arcpy.da.UpdateCursor(input_fc, fields) as cursor:
+        for row in cursor:
+            row[0] = sum(row[1:])
+            cursor.updateRow(row)
+
+def populate_category_sums(input_fc, new_field_name, category_dict):
+    keys_list = get_keys_list_from_category_dict(category_dict)
+    populate_new_field_with_sum_of_others(input_fc, new_field_name, keys_list)
+
+def get_field_value_set(input_fc, field):
+    value_list = []
+    with arcpy.da.SearchCursor(input_fc, [field]) as cursor:
+        for row in cursor:
+            value_list.append(row[0])
+    value_set = set(value_list)
+    return value_set
+
+def get_break_value_list(value_set):
+    break_list = []
+    break_1 = int(((len(value_set)+1)/3)) # find int length of distinct value list + 1 (bc 0 is a value), divide into 3rds
+    break_list.append(break_1)
+    break_list.append(break_1*2)
+    return break_list
+
+def populate_binned_score(input_fc, field):
+    value_set = get_field_value_set(input_fc, field)
+    break_value_list = get_break_value_list(value_set)
+    bin_field = field + "_binned"
+    add_field_if_needed(input_fc, bin_field, "SHORT")
+    with arcpy.da.UpdateCursor(input_fc, [field, bin_field]) as cursor:
+        for row in cursor:
+            if row[0] <= break_value_list[0]:
+                row[1] = 1
+            elif row[0] > break_value_list[0] and row[0] <= break_value_list[1]:
+                row[1] = 2
+            elif row[0] > break_value_list[1]:
+                row[1] = 3
+            cursor.updateRow(row)
+
+def populate_bin_sums(input_fc, new_field_name, text_string_to_find):
+    binned_fields = selected_field_names(input_fc, text_string_to_find)
+    populate_new_field_with_sum_of_others(input_fc, new_field_name, binned_fields)
+
+
+
+
+
+
+
+
 
 
 
