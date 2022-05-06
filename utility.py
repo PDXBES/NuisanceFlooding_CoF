@@ -3,6 +3,7 @@ import logging.config
 import sys
 import arcpy
 import config
+from datetime import datetime
 
 
 # https://stackoverflow.com/questions/6386698/how-to-write-to-a-file-using-the-logging-python-module
@@ -90,6 +91,52 @@ def calc_freq_svc_scores(source_fc, source_field, target_field):
             else:
                 pass
             cursor.updateRow(row)
+
+#criteria_field_1 = 'Age', criteria_field_2 = 'UICPretreatmentType1'
+def calc_UIC_scores(source_fc, target_field, criteria_field_1, criteria_field_2, criteria_field_3):
+    with arcpy.da.UpdateCursor(source_fc, [criteria_field_1, criteria_field_2, criteria_field_3, target_field]) as cursor:
+        for row in cursor:
+            if row[2] == 'no connection to surface':
+                row[3] = 0
+            else:
+                if row[0] is not None:
+                    years = row[0]/365
+                if row[1] in (2, 38): # if UIC has sed MH
+                    if row[0] is None:
+                        row[3] = 3
+                    elif years <= 10:
+                        row[3] = 1
+                    elif years > 10 and years <= 20:
+                        row[3] = 2
+                    elif years > 20 and years <= 30:
+                        row[3] = 3
+                    elif years > 30:
+                        row[3] = 4
+                elif row[1] not in (2, 38):
+                    if row[0] is None:
+                        row[3] = 4
+                    elif years <= 10:
+                        row[3] = 2
+                    elif years > 10 and years <= 20:
+                        row[3] = 3
+                    elif years > 20 and years <= 30:
+                        row[3] = 4
+                    elif years > 30:
+                        row[3] = 5
+            cursor.updateRow(row)
+
+def populate_BO_UIC_score(input_fc):
+    target_field = 'UIC_Score'
+    criteria_field_1 = 'Age_Days'
+    criteria_field_2 = 'UICPretreatmentType1'
+    criteria_field_3 = 'comment_'
+    add_field_if_needed(input_fc, target_field, 'SHORT')
+    calc_UIC_scores(input_fc, target_field, criteria_field_1, criteria_field_2, criteria_field_3)
+    sect = arcpy.PairwiseIntersect_analysis([input_fc, config.block_objects_copy], r"in_memory\sect",  "ALL", "#", "INPUT")
+    max_stat = arcpy.analysis.Statistics(sect, r"in_memory\max_stat", [[target_field, 'MAX']], 'All_ID')
+    arcpy.JoinField_management(config.block_objects_copy, 'All_ID', max_stat, 'All_ID', ["MAX_" + target_field])
+    arcpy.Delete_management(sect)
+    arcpy.Delete_management(max_stat)
 
 def populate_BO_MAX_score_for_text(input_fc, source_field, score_dict):
     score_field = source_field + "_Score"
@@ -243,9 +290,18 @@ def populate_bin_sums(input_fc, new_field_name, text_string_to_find):
     binned_fields = selected_field_names(input_fc, text_string_to_find)
     populate_new_field_with_sum_of_others(input_fc, new_field_name, binned_fields)
 
+def calculate_age(input_fc, date_field, new_field):
+    now = datetime.now()
+    with arcpy.da.UpdateCursor(input_fc, [date_field, new_field]) as cursor:
+        for row in cursor:
+            if row[0] is not None:
+                delta = now - row[0]
+                row[1] = int(delta.days)
+            cursor.updateRow(row)
 
-
-
+def populate_UIC_Age(input_fc, date_field, new_field):
+    add_field_if_needed(input_fc, new_field, 'LONG')
+    calculate_age(input_fc, date_field, new_field)
 
 
 

@@ -23,6 +23,9 @@ utility.populate_BO_MAX_score_for_CVI(config.CVI_dict)
 log_obj.info(" --- populating for - frequent service".format())
 utility.populate_BO_MAX_score_for_freq_svc(config.freq_svc_dict)
 
+log_obj.info(" --- populating for - UIC".format())
+utility.populate_BO_UIC_score(config.UICs_copy)
+
 #calc scores based on intersect alone
 value = 3 # set by Heidi - 3 if overlap, 0 if not
 
@@ -54,5 +57,6 @@ utility.populate_bin_sums(config.block_objects_copy, 'Binned_Sum', 'binned')
 
 log_obj.info(" - save block objects to disk - {}".format(config.output_gdb))
 arcpy.CopyFeatures_management(config.block_objects_copy, os.path.join(config.output_gdb, "BO_TEST1"))
+arcpy.CopyFeatures_management(config.UICs_copy, os.path.join(config.output_gdb, "UICs_TEST1"))
 
 log_obj.info("PROCESS COMPLETE - Nuisance Flooding CoF - ".format())

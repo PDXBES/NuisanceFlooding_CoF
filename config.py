@@ -35,14 +35,18 @@ bike_class = arcpy.MakeFeatureLayer_management(tsp_classes, r"in_memory\bike_cla
 SRTS = "https://services.arcgis.com/quVN97tn06YNGj9s/arcgis/rest/services/SRTSinvestmentroutes_public/FeatureServer/0"
 
 #Facility
-zoning = r"\\besfile1\StormWaterProgram\Data\RAFT\RAWQ\landuse_for_wq2.tif"
-#zoning_layer = arcpy.MakeRasterLayer_management(zoning)
+zoning = r"\\besfile1\StormWaterProgram\Data\RAFT\RAWQ\landuse_for_wq2.tif" #fragile
 zoning_vector = arcpy.RasterToPolygon_conversion(zoning, r"in_memory\zoning_vector", "NO_SIMPLIFY", "Category", "MULTIPLE_OUTER_PART")
 critical_fac = EGH_PUBLIC + r"\EGH_PUBLIC.ARCMAP_ADMIN.critical_facilities_pbem_pdx"
 schools = EGH_PUBLIC + r"\EGH_PUBLIC.ARCMAP_ADMIN.schools_metro"
 
 #CVI
 CVI = EGH_PUBLIC + r"\EGH_Public.ARCMAP_ADMIN.CVI_BES_pdx"
+
+#for LoF
+UICs = EGH_PUBLIC + r"\EGH_Public.ARCMAP_ADMIN.UIC_BES_PDX"
+active_UICs = arcpy.MakeFeatureLayer_management(UICs, r"in_memory\active_UICs", "opsStatus NOT IN( 'NB' , 'PA' )")
+green_streets = EGH_PUBLIC + r"\EGH_Public.ARCMAP_ADMIN.GRST_INSP_BES_PDX"
 
 # if these are important they should really live somewhere else
 block_objects = r"\\besfile1\ASM_AssetMgmt\Projects\Interagency Risk Grid\BlockEval\Data\Arc\GDB\block_working.gdb\block_diss3"
@@ -62,7 +66,11 @@ zoning_copy = arcpy.CopyFeatures_management(zoning_vector, r"in_memory\zoning_co
 critical_fac_copy = arcpy.CopyFeatures_management(critical_fac, r"in_memory\critical_fac_copy")
 schools_copy = arcpy.CopyFeatures_management(schools, r"in_memory\schools_copy")
 CVI_copy = arcpy.CopyFeatures_management(CVI, r"in_memory\CVI_copy")
+UICs_copy = arcpy.CopyFeatures_management(active_UICs, r"in_memory\UICs_copy")
+green_streets_copy = arcpy.CopyFeatures_management(green_streets, r"in_memory\green_streets")
 block_objects_copy = arcpy.CopyFeatures_management(block_objects, r"in_memory\block_objects_copy")
+
+utility.populate_UIC_Age(UICs_copy, 'installDate', 'Age_Days')
 
 #take of max of AM / PM arrivals - creates 'arrivals_all' field
 utility.calc_max_arrivals(peak_arrivals_copy)
