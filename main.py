@@ -24,7 +24,10 @@ log_obj.info(" --- populating for - frequent service".format())
 utility.populate_BO_MAX_score_for_freq_svc(config.freq_svc_dict)
 
 log_obj.info(" --- populating for - UIC".format())
-utility.populate_BO_UIC_score(config.UICs_copy)
+utility.populate_BO_UIC_score(config.UICs_copy, 'UIC_Score')
+
+log_obj.info(" --- populating for - green streets".format())
+utility.populate_BO_green_street_score(config.green_streets_copy, 'GS_Score')
 
 #calc scores based on intersect alone
 value = 3 # set by Heidi - 3 if overlap, 0 if not

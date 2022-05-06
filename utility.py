@@ -125,18 +125,40 @@ def calc_UIC_scores(source_fc, target_field, criteria_field_1, criteria_field_2,
                         row[3] = 5
             cursor.updateRow(row)
 
-def populate_BO_UIC_score(input_fc):
-    target_field = 'UIC_Score'
+def calc_green_street_scores(source_fc, target_field, source_field):
+    with arcpy.da.UpdateCursor(source_fc, [target_field, source_field]) as cursor:
+        for row in cursor:
+            if row[1] is not None:
+                row[0] = row[1]
+            else:
+                row[0] = 0
+            cursor.updateRow(row)
+
+def populate_BO_UIC_score(input_fc, target_field):
     criteria_field_1 = 'Age_Days'
     criteria_field_2 = 'UICPretreatmentType1'
     criteria_field_3 = 'comment_'
+    summary_type = 'MAX'
+    join_field = 'All_ID'
     add_field_if_needed(input_fc, target_field, 'SHORT')
     calc_UIC_scores(input_fc, target_field, criteria_field_1, criteria_field_2, criteria_field_3)
-    sect = arcpy.PairwiseIntersect_analysis([input_fc, config.block_objects_copy], r"in_memory\sect",  "ALL", "#", "INPUT")
-    max_stat = arcpy.analysis.Statistics(sect, r"in_memory\max_stat", [[target_field, 'MAX']], 'All_ID')
-    arcpy.JoinField_management(config.block_objects_copy, 'All_ID', max_stat, 'All_ID', ["MAX_" + target_field])
+    assign_summary_value_by_intersect(input_fc, target_field, summary_type, join_field)
+
+def assign_summary_value_by_intersect(input_fc, target_field, summary_type, join_field):
+    sect = arcpy.PairwiseIntersect_analysis([input_fc, config.block_objects_copy], r"in_memory\sect", "ALL", "#",
+                                            "INPUT")
+    stat = arcpy.analysis.Statistics(sect, r"in_memory\stat", [[target_field, summary_type]], join_field)
+    arcpy.JoinField_management(config.block_objects_copy, join_field, stat, join_field, ["{}_".format(summary_type) + target_field])
     arcpy.Delete_management(sect)
-    arcpy.Delete_management(max_stat)
+    arcpy.Delete_management(stat)
+
+def populate_BO_green_street_score(input_fc, target_field):
+    add_field_if_needed(input_fc, target_field, 'SHORT')
+    summary_type = 'MAX'
+    join_field = 'All_ID'
+    source_field = 'STRUCTURAL_RATING'
+    calc_green_street_scores(input_fc, target_field, source_field)
+    assign_summary_value_by_intersect(input_fc, target_field, summary_type, join_field)
 
 def populate_BO_MAX_score_for_text(input_fc, source_field, score_dict):
     score_field = source_field + "_Score"
