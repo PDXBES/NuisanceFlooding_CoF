@@ -39,9 +39,14 @@ utility.fillField_ifOverlap(config.block_objects_copy, config.SRTS_copy, "SRTS_S
 
 utility.fillField_ifOverlap(config.block_objects_copy, config.ped_districts, "ped_district_Score", value)
 
+log_obj.info(" - populate Connection Status - ".format())
+#utility.calc_surface_connection(config.block_objects_copy, 'comment_', 'No_Connection')
+utility.populate_surface_connection(config.UICs_copy, 'comment_', 'No_Connection')
+
 # convert all Nulls in Score fields to value of 0
 log_obj.info(" - zero out Score fields (remove Nulls) - ".format())
 utility.set_selected_field_Nulls_to_zero(config.block_objects_copy, 'Score')
+utility.set_selected_field_Nulls_to_zero(config.block_objects_copy, 'No_Connection')
 
 log_obj.info(" - add and populate Category fields (score sums) - ".format())
 utility.populate_category_fields(config.block_objects_copy, config.categories)
@@ -55,8 +60,19 @@ for key in config.categories.keys():
     log_obj.info(" - add and populate binned value for - {}".format(key))
     utility.populate_binned_score(config.block_objects_copy, key)
 
-log_obj.info(" - add and populate Binned_Sum - ".format())
+log_obj.info(" - add and populate Binned_Sum - ".format()) # this is the "CoF final score"
 utility.populate_bin_sums(config.block_objects_copy, 'Binned_Sum', 'binned')
+
+log_obj.info(" - find the max/ mean of GS/ UIC scores - ".format())
+GS_UIC_fields = ['MAX_UIC_Score', 'MAX_GS_Score']
+utility.calc_max_of_two_fields(config.block_objects_copy, GS_UIC_fields, 'GS_UIC_max')
+utility.calc_mean_of_two_fields(config.block_objects_copy, GS_UIC_fields, 'GS_UIC_mean')
+
+log_obj.info(" - combine CoF/ LoF scores (multiply them) - ".format())
+CoF_LoF_max_fields = ['GS_UIC_max', 'Binned_Sum']
+utility.calc_multiple_of_two_fields(config.block_objects_copy, CoF_LoF_max_fields, 'Combined_max')
+CoLoF_mean_fields = ['GS_UIC_mean', 'Binned_Sum']
+utility.calc_multiple_of_two_fields(config.block_objects_copy, CoLoF_mean_fields, 'Combined_mean')
 
 log_obj.info(" - save block objects to disk - {}".format(config.output_gdb))
 arcpy.CopyFeatures_management(config.block_objects_copy, os.path.join(config.output_gdb, "BO_TEST1"))

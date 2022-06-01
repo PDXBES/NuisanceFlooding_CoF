@@ -144,6 +144,23 @@ def populate_BO_UIC_score(input_fc, target_field):
     calc_UIC_scores(input_fc, target_field, criteria_field_1, criteria_field_2, criteria_field_3)
     assign_summary_value_by_intersect(input_fc, target_field, summary_type, join_field)
 
+def calc_surface_connection(input_fc, source_field, new_field):
+
+    with arcpy.da.UpdateCursor(input_fc, [new_field, source_field]) as cursor:
+        for row in cursor:
+            if row[1] == 'no connection to surface':
+                row[0] = 1
+            else:
+                row[0] = 0
+            cursor.updateRow(row)
+
+def populate_surface_connection(input_fc, source_field, new_field):
+    add_field_if_needed(input_fc, new_field, 'SHORT')
+    calc_surface_connection(input_fc, source_field, new_field)
+    join_field = 'All_ID'
+    summary_type = 'MIN' # means if any 1 asset has connection in the BO then the BO is 'connected'
+    assign_summary_value_by_intersect(input_fc, new_field, summary_type, join_field)
+
 def assign_summary_value_by_intersect(input_fc, target_field, summary_type, join_field):
     sect = arcpy.PairwiseIntersect_analysis([input_fc, config.block_objects_copy], r"in_memory\sect", "ALL", "#",
                                             "INPUT")
@@ -208,6 +225,42 @@ def calc_max_arrivals(input_fc):
                     row[2] = row[0]
                 else:
                     pass
+            cursor.updateRow(row)
+
+def calc_max_of_two_fields(input_fc, source_field_list, new_field):
+    add_field_if_needed(input_fc, new_field, 'SHORT')
+    field_list = [new_field]
+    for field in source_field_list:
+        field_list.append(field)
+    with arcpy.da.UpdateCursor(input_fc, field_list) as cursor:
+        for row in cursor:
+            if row[1] is not None and row[2] is not None:
+                if row[1] > row[2]:
+                    row[0] = row[1]
+                elif row[2] > row[1]:
+                    row[0] = row[2]
+            cursor.updateRow(row)
+
+def calc_mean_of_two_fields(input_fc, source_field_list, new_field):
+    add_field_if_needed(input_fc, new_field, 'SHORT')
+    field_list = [new_field]
+    for field in source_field_list:
+        field_list.append(field)
+    with arcpy.da.UpdateCursor(input_fc, field_list) as cursor:
+        for row in cursor:
+            if row[1] is not None and row[2] is not None:
+                row[0] = (row[1] + row[2])/2
+            cursor.updateRow(row)
+
+def calc_multiple_of_two_fields(input_fc, source_field_list, new_field):
+    add_field_if_needed(input_fc, new_field, 'SHORT')
+    field_list = [new_field]
+    for field in source_field_list:
+        field_list.append(field)
+    with arcpy.da.UpdateCursor(input_fc, field_list) as cursor:
+        for row in cursor:
+            if row[1] is not None and row[2] is not None:
+                row[0] = row[1] * row[2]
             cursor.updateRow(row)
 
 def selected_field_names(input_fc, text_string_to_find):
