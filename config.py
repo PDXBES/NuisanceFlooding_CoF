@@ -8,6 +8,7 @@ print("Nuisance Flooding CoF - Starting Config: " + datetime.now().strftime("%m/
 
 #for testing
 output_gdb = r"\\besfile1\ccsp\Mapping\Gdb\Stormwater_NuisanceFlooding_CoF_dev.gdb"
+#output_gdb = r"\\besfile1\ccsp\Mapping\Gdb\Stormwater_NuisanceFlooding_CoF_working.gdb"
 
 log_file = r"\\besfile1\ccsp\Mapping\dev\log\NF_CoF_log"
 
@@ -103,5 +104,9 @@ categories = {
             'Facility_Sum': ['MAX_Category_Score', 'critical_fac_Score'],
             'CVI_Sum': ['MAX_OVERALL_RANK_Score']
             }
+
+# wish there was a better way, these are set manually to split CoF into 5 bins
+# if the values/ range in CoF change then this list needs to change as well
+CoF_bin_breaks = [4, 6, 8, 10]
 
 print("Nuisance Flooding CoF - Config Complete: " + datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))

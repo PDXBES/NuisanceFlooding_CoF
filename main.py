@@ -40,7 +40,6 @@ utility.fillField_ifOverlap(config.block_objects_copy, config.SRTS_copy, "SRTS_S
 utility.fillField_ifOverlap(config.block_objects_copy, config.ped_districts, "ped_district_Score", value)
 
 log_obj.info(" - populate Connection Status - ".format())
-#utility.calc_surface_connection(config.block_objects_copy, 'comment_', 'No_Connection')
 utility.populate_surface_connection(config.UICs_copy, 'comment_', 'No_Connection')
 
 # convert all Nulls in Score fields to value of 0
@@ -51,31 +50,29 @@ utility.set_selected_field_Nulls_to_zero(config.block_objects_copy, 'No_Connecti
 log_obj.info(" - add and populate Category fields (score sums) - ".format())
 utility.populate_category_fields(config.block_objects_copy, config.categories)
 
-#log_obj.info(" - add and populate sum of Category values - ".format())
-# didn't actually need this - keep for now
-#utility.populate_category_sums(config.block_objects_copy, "category_sums", config.categories)
-
 # bin upper, middle, lower 1/3 of values within each category and assign 3,2,1
 for key in config.categories.keys():
     log_obj.info(" - add and populate binned value for - {}".format(key))
-    utility.populate_binned_score(config.block_objects_copy, key)
+    utility.populate_binned_score_3rds(config.block_objects_copy, key)
 
-log_obj.info(" - add and populate Binned_Sum - ".format()) # this is the "CoF final score"
-utility.populate_bin_sums(config.block_objects_copy, 'Binned_Sum', 'binned')
+log_obj.info(" - add and populate Binned_Sum (CoF) - ".format()) # this is the "CoF score"
+utility.populate_bin_sums(config.block_objects_copy, 'CoF', 'binned')
 
-log_obj.info(" - find the max/ mean of GS/ UIC scores - ".format())
+log_obj.info(" - add and populate binned CoF - ".format())
+utility.populate_binned_score_5ths(config.block_objects_copy, 'CoF')
+
+log_obj.info(" - find the max/ mean between GS/ UIC scores - ".format())
 GS_UIC_fields = ['MAX_UIC_Score', 'MAX_GS_Score']
-utility.calc_max_of_two_fields(config.block_objects_copy, GS_UIC_fields, 'GS_UIC_max')
-utility.calc_mean_of_two_fields(config.block_objects_copy, GS_UIC_fields, 'GS_UIC_mean')
+utility.calc_max_of_two_fields(config.block_objects_copy, GS_UIC_fields, 'LoF_max')
+utility.calc_mean_of_two_fields(config.block_objects_copy, GS_UIC_fields, 'LoF_mean')
 
 log_obj.info(" - combine CoF/ LoF scores (multiply them) - ".format())
-CoF_LoF_max_fields = ['GS_UIC_max', 'Binned_Sum']
-utility.calc_multiple_of_two_fields(config.block_objects_copy, CoF_LoF_max_fields, 'Combined_max')
-CoLoF_mean_fields = ['GS_UIC_mean', 'Binned_Sum']
-utility.calc_multiple_of_two_fields(config.block_objects_copy, CoLoF_mean_fields, 'Combined_mean')
+CoF_LoF_max_fields = ['LoF_max', 'CoF_binned']
+utility.calc_multiple_of_two_fields(config.block_objects_copy, CoF_LoF_max_fields, 'Risk_max')
+CoLoF_mean_fields = ['LoF_mean', 'CoF_binned']
+utility.calc_multiple_of_two_fields(config.block_objects_copy, CoLoF_mean_fields, 'Risk_mean')
 
 log_obj.info(" - save block objects to disk - {}".format(config.output_gdb))
-arcpy.CopyFeatures_management(config.block_objects_copy, os.path.join(config.output_gdb, "BO_TEST1"))
-arcpy.CopyFeatures_management(config.UICs_copy, os.path.join(config.output_gdb, "UICs_TEST1"))
+arcpy.CopyFeatures_management(config.block_objects_copy, os.path.join(config.output_gdb, "Nuisance_Flooding_BOs"))
 
 log_obj.info("PROCESS COMPLETE - Nuisance Flooding CoF - ".format())

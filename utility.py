@@ -239,6 +239,8 @@ def calc_max_of_two_fields(input_fc, source_field_list, new_field):
                     row[0] = row[1]
                 elif row[2] > row[1]:
                     row[0] = row[2]
+                elif row[2] == row[1]:
+                    row[0] = row[1]
             cursor.updateRow(row)
 
 def calc_mean_of_two_fields(input_fc, source_field_list, new_field):
@@ -339,16 +341,27 @@ def get_field_value_set(input_fc, field):
     value_set = set(value_list)
     return value_set
 
-def get_break_value_list(value_set):
+def get_break_value_list_3rds(value_set):
     break_list = []
     break_1 = int(((len(value_set)+1)/3)) # find int length of distinct value list + 1 (bc 0 is a value), divide into 3rds
     break_list.append(break_1)
     break_list.append(break_1*2)
     return break_list
 
-def populate_binned_score(input_fc, field):
+# this does not work for values that are not 0 or 1 - x eg range of 4 - 12
+def get_break_list(value_set, number_of_breaks):
+    break_list = []
+    range = max(value_set) - min(value_set) + 1
+    range_rounded = round(range/number_of_breaks) * number_of_breaks
+    count = 1
+    while count < number_of_breaks:
+        break_list.append(int((range_rounded/ number_of_breaks) * count))
+        count = count + 1
+    return break_list
+
+def populate_binned_score_3rds(input_fc, field):
     value_set = get_field_value_set(input_fc, field)
-    break_value_list = get_break_value_list(value_set)
+    break_value_list = get_break_value_list_3rds(value_set)
     bin_field = field + "_binned"
     add_field_if_needed(input_fc, bin_field, "SHORT")
     with arcpy.da.UpdateCursor(input_fc, [field, bin_field]) as cursor:
@@ -359,6 +372,23 @@ def populate_binned_score(input_fc, field):
                 row[1] = 2
             elif row[0] > break_value_list[1]:
                 row[1] = 3
+            cursor.updateRow(row)
+
+def populate_binned_score_5ths(input_fc, field):
+    bin_field = field + "_binned"
+    add_field_if_needed(input_fc, bin_field, "SHORT")
+    with arcpy.da.UpdateCursor(input_fc, [field, bin_field]) as cursor:
+        for row in cursor:
+            if row[0] <= config.CoF_bin_breaks[0]:
+                row[1] = 1
+            elif row[0] > config.CoF_bin_breaks[0] and row[0] <= config.CoF_bin_breaks[1]:
+                row[1] = 2
+            elif row[0] > config.CoF_bin_breaks[0] and row[0] <= config.CoF_bin_breaks[2]:
+                row[1] = 3
+            elif row[0] > config.CoF_bin_breaks[0] and row[0] <= config.CoF_bin_breaks[3]:
+                row[1] = 4
+            elif row[0] > config.CoF_bin_breaks[3]:
+                row[1] = 5
             cursor.updateRow(row)
 
 def populate_bin_sums(input_fc, new_field_name, text_string_to_find):
