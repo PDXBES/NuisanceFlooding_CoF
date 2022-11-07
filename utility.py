@@ -139,7 +139,7 @@ def populate_BO_UIC_score(input_fc, target_field):
     criteria_field_2 = 'UICPretreatmentType1'
     criteria_field_3 = 'comment_'
     summary_type = 'MAX'
-    join_field = 'All_ID'
+    join_field = 'block_object_ID'
     add_field_if_needed(input_fc, target_field, 'SHORT')
     calc_UIC_scores(input_fc, target_field, criteria_field_1, criteria_field_2, criteria_field_3)
     assign_summary_value_by_intersect(input_fc, target_field, summary_type, join_field)
@@ -157,7 +157,7 @@ def calc_surface_connection(input_fc, source_field, new_field):
 def populate_surface_connection(input_fc, source_field, new_field):
     add_field_if_needed(input_fc, new_field, 'SHORT')
     calc_surface_connection(input_fc, source_field, new_field)
-    join_field = 'All_ID'
+    join_field = 'block_object_ID'
     summary_type = 'MIN' # means if any 1 asset has connection in the BO then the BO is 'connected'
     assign_summary_value_by_intersect(input_fc, new_field, summary_type, join_field)
 
@@ -172,7 +172,7 @@ def assign_summary_value_by_intersect(input_fc, target_field, summary_type, join
 def populate_BO_green_street_score(input_fc, target_field):
     add_field_if_needed(input_fc, target_field, 'SHORT')
     summary_type = 'MAX'
-    join_field = 'All_ID'
+    join_field = 'block_object_ID'
     source_field = 'STRUCTURAL_RATING'
     calc_green_street_scores(input_fc, target_field, source_field)
     assign_summary_value_by_intersect(input_fc, target_field, summary_type, join_field)
@@ -182,8 +182,8 @@ def populate_BO_MAX_score_for_text(input_fc, source_field, score_dict):
     add_field_if_needed(input_fc, score_field, "SHORT")
     calc_scores_from_text(input_fc, source_field, score_field, score_dict)
     sect = arcpy.analysis.PairwiseIntersect([input_fc, config.block_objects_copy], r"in_memory\{}".format(source_field), "ALL", "#", "INPUT")
-    max_stat = arcpy.analysis.Statistics(sect, r"in_memory\max_stat", [[score_field, 'MAX']], 'All_ID')
-    arcpy.JoinField_management(config.block_objects_copy, 'All_ID', max_stat, 'All_ID', ["MAX_" + score_field])
+    max_stat = arcpy.analysis.Statistics(sect, r"in_memory\max_stat", [[score_field, 'MAX']], 'block_object_ID')
+    arcpy.JoinField_management(config.block_objects_copy, 'block_object_ID', max_stat, 'block_object_ID', ["MAX_" + score_field])
     arcpy.Delete_management(sect)
     arcpy.Delete_management(max_stat)
 
@@ -193,8 +193,8 @@ def populate_BO_MAX_score_for_CVI(CVI_dict):
         add_field_if_needed(key, score_field, "SHORT")
         calc_CVI_scores(key, value, score_field)
         sect = arcpy.analysis.PairwiseIntersect([key, config.block_objects_copy], r"in_memory\{}".format(value), "ALL", "#", "INPUT")
-        max_stat = arcpy.analysis.Statistics(sect, r"in_memory\max_stat", [[score_field, 'MAX']], 'All_ID')
-        arcpy.JoinField_management(config.block_objects_copy, 'All_ID', max_stat, 'All_ID', ["MAX_" + score_field])
+        max_stat = arcpy.analysis.Statistics(sect, r"in_memory\max_stat", [[score_field, 'MAX']], 'block_object_ID')
+        arcpy.JoinField_management(config.block_objects_copy, 'block_object_ID', max_stat, 'block_object_ID', ["MAX_" + score_field])
         arcpy.Delete_management(sect)
         arcpy.Delete_management(max_stat)
 
@@ -204,8 +204,8 @@ def populate_BO_MAX_score_for_freq_svc(freq_service_dict):
         add_field_if_needed(key, score_field, "SHORT")
         calc_freq_svc_scores(key, value, score_field)
         sect = arcpy.analysis.PairwiseIntersect([key, config.block_objects_copy], r"in_memory\{}".format(value), "ALL", "#", "INPUT")
-        max_stat = arcpy.analysis.Statistics(sect, r"in_memory\max_stat", [[score_field, 'MAX']], 'All_ID')
-        arcpy.JoinField_management(config.block_objects_copy, 'All_ID', max_stat, 'All_ID', ["MAX_" + score_field])
+        max_stat = arcpy.analysis.Statistics(sect, r"in_memory\max_stat", [[score_field, 'MAX']], 'block_object_ID')
+        arcpy.JoinField_management(config.block_objects_copy, 'block_object_ID', max_stat, 'block_object_ID', ["MAX_" + score_field])
         arcpy.Delete_management(sect)
         arcpy.Delete_management(max_stat)
 

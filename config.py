@@ -6,9 +6,7 @@ from datetime import datetime
 
 print("Nuisance Flooding CoF - Starting Config: " + datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
 
-#for testing
 output_gdb = r"\\besfile1\ccsp\Mapping\Gdb\Stormwater_NuisanceFlooding_CoF_dev.gdb"
-#output_gdb = r"\\besfile1\ccsp\Mapping\Gdb\Stormwater_NuisanceFlooding_CoF_working.gdb"
 
 log_file = r"\\besfile1\ccsp\Mapping\dev\log\NF_CoF_log"
 
@@ -50,7 +48,9 @@ active_UICs = arcpy.MakeFeatureLayer_management(UICs, r"in_memory\active_UICs", 
 green_streets = EGH_PUBLIC + r"\EGH_Public.ARCMAP_ADMIN.GRST_INSP_BES_PDX"
 
 # if these are important they should really live somewhere else
-block_objects = r"\\besfile1\ASM_AssetMgmt\Projects\Interagency Risk Grid\BlockEval\Data\Arc\GDB\block_working.gdb\block_diss3"
+#block_objects = r"\\besfile1\ASM_AssetMgmt\Projects\Interagency Risk Grid\BlockEval\Data\Arc\GDB\block_working.gdb\block_diss3" # first version
+#block_objects = r"\\besfile1\ASM_AssetMgmt\Projects\Interagency Risk Grid\BlockEval\Data\Arc\GDB\block_working_v2.gdb\block_objects" # second version
+block_objects = r"\\besfile1\ASM_AssetMgmt\Projects\Interagency Risk Grid\BlockEval\Data\Arc\GDB\block_automation.gdb\block_objects"
 
 print(" - Reading inputs into memory: " + datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
 ped_districts_copy = arcpy.CopyFeatures_management(ped_districts, r"in_memory\ped_districts_copy")
