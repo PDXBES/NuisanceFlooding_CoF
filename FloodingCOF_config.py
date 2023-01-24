@@ -1,6 +1,6 @@
 import os
 import arcpy
-import utility
+import FloodingCOF_utility
 from datetime import datetime
 
 
@@ -71,10 +71,10 @@ UICs_copy = arcpy.CopyFeatures_management(active_UICs, r"in_memory\UICs_copy")
 green_streets_copy = arcpy.CopyFeatures_management(green_streets, r"in_memory\green_streets")
 block_objects_copy = arcpy.CopyFeatures_management(block_objects, r"in_memory\block_objects_copy")
 
-utility.populate_UIC_Age(UICs_copy, 'installDate', 'Age_Days')
+FloodingCOF_utility.populate_UIC_Age(UICs_copy, 'installDate', 'Age_Days')
 
 #take of max of AM / PM arrivals - creates 'arrivals_all' field
-utility.calc_max_arrivals(peak_arrivals_copy)
+FloodingCOF_utility.calc_max_arrivals(peak_arrivals_copy)
 
 ped_route_dict = {'MCW':3, 'CW':2, 'NW':1, 'PD':1, 'LS':1}
 transit_route_dict = {'RT':3, 'RTMTP':3, 'MTP':2, 'TA':2, 'LS':1}

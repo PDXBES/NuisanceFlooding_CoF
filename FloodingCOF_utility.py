@@ -2,7 +2,7 @@ import logging
 import logging.config
 import sys
 import arcpy
-import config
+import FloodingCOF_config
 from datetime import datetime
 
 
@@ -162,10 +162,10 @@ def populate_surface_connection(input_fc, source_field, new_field):
     assign_summary_value_by_intersect(input_fc, new_field, summary_type, join_field)
 
 def assign_summary_value_by_intersect(input_fc, target_field, summary_type, join_field):
-    sect = arcpy.PairwiseIntersect_analysis([input_fc, config.block_objects_copy], r"in_memory\sect", "ALL", "#",
+    sect = arcpy.PairwiseIntersect_analysis([input_fc, FloodingCOF_config.block_objects_copy], r"in_memory\sect", "ALL", "#",
                                             "INPUT")
     stat = arcpy.analysis.Statistics(sect, r"in_memory\stat", [[target_field, summary_type]], join_field)
-    arcpy.JoinField_management(config.block_objects_copy, join_field, stat, join_field, ["{}_".format(summary_type) + target_field])
+    arcpy.JoinField_management(FloodingCOF_config.block_objects_copy, join_field, stat, join_field, ["{}_".format(summary_type) + target_field])
     arcpy.Delete_management(sect)
     arcpy.Delete_management(stat)
 
@@ -181,9 +181,9 @@ def populate_BO_MAX_score_for_text(input_fc, source_field, score_dict):
     score_field = source_field + "_Score"
     add_field_if_needed(input_fc, score_field, "SHORT")
     calc_scores_from_text(input_fc, source_field, score_field, score_dict)
-    sect = arcpy.analysis.PairwiseIntersect([input_fc, config.block_objects_copy], r"in_memory\{}".format(source_field), "ALL", "#", "INPUT")
+    sect = arcpy.analysis.PairwiseIntersect([input_fc, FloodingCOF_config.block_objects_copy], r"in_memory\{}".format(source_field), "ALL", "#", "INPUT")
     max_stat = arcpy.analysis.Statistics(sect, r"in_memory\max_stat", [[score_field, 'MAX']], 'block_object_ID')
-    arcpy.JoinField_management(config.block_objects_copy, 'block_object_ID', max_stat, 'block_object_ID', ["MAX_" + score_field])
+    arcpy.JoinField_management(FloodingCOF_config.block_objects_copy, 'block_object_ID', max_stat, 'block_object_ID', ["MAX_" + score_field])
     arcpy.Delete_management(sect)
     arcpy.Delete_management(max_stat)
 
@@ -192,9 +192,9 @@ def populate_BO_MAX_score_for_CVI(CVI_dict):
         score_field = value + "_Score"
         add_field_if_needed(key, score_field, "SHORT")
         calc_CVI_scores(key, value, score_field)
-        sect = arcpy.analysis.PairwiseIntersect([key, config.block_objects_copy], r"in_memory\{}".format(value), "ALL", "#", "INPUT")
+        sect = arcpy.analysis.PairwiseIntersect([key, FloodingCOF_config.block_objects_copy], r"in_memory\{}".format(value), "ALL", "#", "INPUT")
         max_stat = arcpy.analysis.Statistics(sect, r"in_memory\max_stat", [[score_field, 'MAX']], 'block_object_ID')
-        arcpy.JoinField_management(config.block_objects_copy, 'block_object_ID', max_stat, 'block_object_ID', ["MAX_" + score_field])
+        arcpy.JoinField_management(FloodingCOF_config.block_objects_copy, 'block_object_ID', max_stat, 'block_object_ID', ["MAX_" + score_field])
         arcpy.Delete_management(sect)
         arcpy.Delete_management(max_stat)
 
@@ -203,9 +203,9 @@ def populate_BO_MAX_score_for_freq_svc(freq_service_dict):
         score_field = value + "_Score"
         add_field_if_needed(key, score_field, "SHORT")
         calc_freq_svc_scores(key, value, score_field)
-        sect = arcpy.analysis.PairwiseIntersect([key, config.block_objects_copy], r"in_memory\{}".format(value), "ALL", "#", "INPUT")
+        sect = arcpy.analysis.PairwiseIntersect([key, FloodingCOF_config.block_objects_copy], r"in_memory\{}".format(value), "ALL", "#", "INPUT")
         max_stat = arcpy.analysis.Statistics(sect, r"in_memory\max_stat", [[score_field, 'MAX']], 'block_object_ID')
-        arcpy.JoinField_management(config.block_objects_copy, 'block_object_ID', max_stat, 'block_object_ID', ["MAX_" + score_field])
+        arcpy.JoinField_management(FloodingCOF_config.block_objects_copy, 'block_object_ID', max_stat, 'block_object_ID', ["MAX_" + score_field])
         arcpy.Delete_management(sect)
         arcpy.Delete_management(max_stat)
 
@@ -379,15 +379,15 @@ def populate_binned_score_5ths(input_fc, field):
     add_field_if_needed(input_fc, bin_field, "SHORT")
     with arcpy.da.UpdateCursor(input_fc, [field, bin_field]) as cursor:
         for row in cursor:
-            if row[0] <= config.CoF_bin_breaks[0]:
+            if row[0] <= FloodingCOF_config.CoF_bin_breaks[0]:
                 row[1] = 1
-            elif row[0] > config.CoF_bin_breaks[0] and row[0] <= config.CoF_bin_breaks[1]:
+            elif row[0] > FloodingCOF_config.CoF_bin_breaks[0] and row[0] <= FloodingCOF_config.CoF_bin_breaks[1]:
                 row[1] = 2
-            elif row[0] > config.CoF_bin_breaks[0] and row[0] <= config.CoF_bin_breaks[2]:
+            elif row[0] > FloodingCOF_config.CoF_bin_breaks[0] and row[0] <= FloodingCOF_config.CoF_bin_breaks[2]:
                 row[1] = 3
-            elif row[0] > config.CoF_bin_breaks[0] and row[0] <= config.CoF_bin_breaks[3]:
+            elif row[0] > FloodingCOF_config.CoF_bin_breaks[0] and row[0] <= FloodingCOF_config.CoF_bin_breaks[3]:
                 row[1] = 4
-            elif row[0] > config.CoF_bin_breaks[3]:
+            elif row[0] > FloodingCOF_config.CoF_bin_breaks[3]:
                 row[1] = 5
             cursor.updateRow(row)
 
